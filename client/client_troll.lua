@@ -6,11 +6,11 @@ RegisterNetEvent('rsg-adminmenu:client:playerstroll', function()
         local options = {}
         for k, v in pairs(players) do
             options[#options + 1] = {
-                title = Lang:t('lang_19')..k..' | '..v.name,
+                title = Lang:t('lang_19')..v.id..' | '..v.name,
                 description = Lang:t('lang_20'),
                 icon = 'fa-solid fa-circle-user',
                 event = 'rsg-adminmenu:client:trolloptions',
-                args = { name = v.name, player = k },
+                args = { name = v.name, player = v.id },
                 arrow = true,
             }
         end
@@ -86,7 +86,7 @@ RegisterNetEvent('rsg-adminmenu:client:wildattack', function(player)
 
     -- creating animal
     animalPed = CreatePed(animalHash, coordsBehindPlayer.x, coordsBehindPlayer.y, groundZ, playerHeading, true, false)
-    Citizen.InvokeNative(0x77FF8D35EEC6BBC4, animalPed, 1, 0) --EquipMetaPedOutfitPreset
+    EquipMetaPedOutfitPreset(animalPed, 1, 0)
 
     -- setting player as enemy
     SetPedFleeAttributes(animalPed, 0, 0)

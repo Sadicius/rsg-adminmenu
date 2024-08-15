@@ -39,9 +39,9 @@ local Translations = {
     lang_36 = 'Toggle Spectate Player',
     lang_37 = 'toggles spectate on another player on/off',
     lang_38 = 'Server Options Menu',
-    lang_39 = 'title',
-    lang_40 = 'description',
-    
+    lang_39 = 'Server Weather',
+    lang_40 = 'adjust server weather',
+
     lang_42 = 'Invisible On',
     lang_43 = 'as you can see you are invisible!',
     lang_44 = 'Invisible Off',
@@ -73,7 +73,7 @@ local Translations = {
     -- client-dev
     lang_69 = 'Developer Menu',
     lang_70 = 'Copy Vector 2',
-    lang_71 = 'Teleport to Marker',
+    lang_71 = 'copy vector2 coords',
     lang_72 = 'Copy Vector 3',
     lang_73 = 'copy vector3 coords',
     lang_74 = 'Copy Vector 4',
@@ -92,7 +92,7 @@ local Translations = {
     lang_85 = 'Troll Options Menu',
     lang_86 = 'Wild Attack',
     lang_87 = 'troll player by activating a wild attack',
-    
+
     lang_88 = 'Player Finances',
     lang_89 = 'adjust player finances',
     lang_90 = 'Finances Options Menu',
@@ -158,6 +158,8 @@ local Translations = {
     lang_143 = 'Cash : ',
     lang_144 = 'Bank : ',
     lang_145 = 'Blood Money : ',
+    lang_146 = 'Toggle IDs',
+    lang_147 = 'Toggle Player IDs on/off',
 }
 
 Lang = Locale:new({

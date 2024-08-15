@@ -1,35 +1,6 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
 
 -----------------------------------------------------------------------
--- version checker
------------------------------------------------------------------------
-local function versionCheckPrint(_type, log)
-    local color = _type == 'success' and '^2' or '^1'
-
-    print(('^5['..GetCurrentResourceName()..']%s %s^7'):format(color, log))
-end
-
-local function CheckVersion()
-    PerformHttpRequest('https://raw.githubusercontent.com/Rexshack-RedM/rsg-adminmenu/main/version.txt', function(err, text, headers)
-        local currentVersion = GetResourceMetadata(GetCurrentResourceName(), 'version')
-
-        if not text then 
-            versionCheckPrint('error', 'Currently unable to run a version check.')
-            return 
-        end
-
-        --versionCheckPrint('success', ('Current Version: %s'):format(currentVersion))
-        --versionCheckPrint('success', ('Latest Version: %s'):format(text))
-        
-        if text == currentVersion then
-            versionCheckPrint('success', 'You are running the latest version.')
-        else
-            versionCheckPrint('error', ('You are currently running an outdated version, please update to version %s'):format(text))
-        end
-    end)
-end
-
------------------------------------------------------------------------
 
 local permissions = {
     ["adminmenu"] = "admin",
@@ -257,11 +228,11 @@ RegisterNetEvent('rsg-adminmenu:server:freezeplayer', function(player)
         local target = GetPlayerPed(player.id)
         if not frozen then
             frozen = true
-            Citizen.InvokeNative(0x7D9EFB7AD6B19754, target, true)
+            FreezeEntityPosition(target, true)
             TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_111'), description = Lang:t('lang_112')..player.name, type = 'inform' })
         else
             frozen = false
-            Citizen.InvokeNative(0x7D9EFB7AD6B19754, target, false)
+            FreezeEntityPosition(target, false)
             TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_113'), description = Lang:t('lang_114')..player.name, type = 'inform' })
         end
     else
@@ -345,11 +316,11 @@ RegisterNetEvent('rsg-adminmenu:server:giveitem', function(player, item, amount)
         local Player = RSGCore.Functions.GetPlayer(id)
         local amount = amount
         Player.Functions.AddItem(item, amount)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_135'), description = Lang:t('lang_136'), type = 'inform' })
+        TriggerClientEvent('ox_lib:notify', src, {title = Lang:t('lang_135'), description = Lang:t('lang_136'), type = 'inform' })
     else
         BanPlayer(src)
         TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised Use', 'red', firstname..' '..lastname..' with citizen id of '..citizenid..' banned for using give item', true)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
+        TriggerClientEvent('ox_lib:notify', src, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
     end
 end)
 
@@ -358,47 +329,40 @@ end)
 ----------------------------------------------------------------------
 RSGCore.Functions.CreateCallback('rsg-adminmenu:server:getplayerinfo', function(source, cb, player)
     local src = source
-    local Player = RSGCore.Functions.GetPlayer(src)
-    local firstname = Player.PlayerData.charinfo.firstname
-    local lastname = Player.PlayerData.charinfo.lastname
-    local citizenid = Player.PlayerData.citizenid
+    local adminPlayer = RSGCore.Functions.GetPlayer(src)
+    local adminfirstname = adminPlayer.PlayerData.charinfo.firstname
+    local adminlastname = adminPlayer.PlayerData.charinfo.lastname
+    local admincitizenid = adminPlayer.PlayerData.citizenid
 
     if RSGCore.Functions.HasPermission(src, permissions['playerinfo']) or IsPlayerAceAllowed(src, 'command') then
-        
-        local id = player.id
-        local Player     = RSGCore.Functions.GetPlayer(id)
-        local firstname  = Player.PlayerData.charinfo.firstname
-        local lastname   = Player.PlayerData.charinfo.lastname
-        local job        = Player.PlayerData.job.label
-        local grade      = Player.PlayerData.job.grade.level
-        local cash       = Player.PlayerData.money["cash"]
-        local bank       = Player.PlayerData.money["bank"]
-        local bloodmoney = Player.PlayerData.money["bloodmoney"]
-        local citizenid  = Player.PlayerData.citizenid
-        local serverid   = id
 
-        
+        local id = player.id
+        local targetPlayer     = RSGCore.Functions.GetPlayer(id)
+        local targetfirstname  = targetPlayer.PlayerData.charinfo.firstname
+        local targetlastname   = targetPlayer.PlayerData.charinfo.lastname
+        local targetjob        = targetPlayer.PlayerData.job.label
+        local targetgrade      = targetPlayer.PlayerData.job.grade.level
+        local targetcash       = targetPlayer.PlayerData.money["cash"]
+        local targetbank       = targetPlayer.PlayerData.money["bank"]
+        local targetbloodmoney = targetPlayer.PlayerData.money["bloodmoney"]
+        local targetcitizenid  = targetPlayer.PlayerData.citizenid
+        local targetserverid   = id
+
+
         cb({
-            firstname  = firstname,
-            lastname   = lastname,
-            job        = job, 
-            grade      = grade,
-            cash       = cash,
-            bank       = bank,
-            bloodmoney = bloodmoney,
-            citizenid  = citizenid,
-            serverid   = serverid,
+            firstname  = targetfirstname,
+            lastname   = targetlastname,
+            job        = targetjob,
+            grade      = targetgrade,
+            cash       = targetcash,
+            bank       = targetbank,
+            bloodmoney = targetbloodmoney,
+            citizenid  = targetcitizenid,
+            serverid   = targetserverid,
         })
     else
         BanPlayer(src)
-        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised Use', 'red', firstname..' '..lastname..' with citizen id of '..citizenid..' banned for using get player info', true)
-        TriggerClientEvent('ox_lib:notify', source, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
+        TriggerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Unuthorised Use', 'red', adminfirstname..' '..adminlastname..' with citizen id of '..admincitizenid..' banned for using get player info', true)
+        TriggerClientEvent('ox_lib:notify', src, {title = Lang:t('lang_101'), description = Lang:t('lang_102'), type = 'inform' })
     end
 end)
-
------------------------------------------------------------------------
-
---------------------------------------------------------------------------------------------------
--- start version check
---------------------------------------------------------------------------------------------------
-CheckVersion()

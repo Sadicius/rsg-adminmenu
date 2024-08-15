@@ -82,7 +82,18 @@ RegisterNetEvent('rsg-adminmenu:client:adminoptions', function()
                 title = Lang:t('lang_15'),
                 description = Lang:t('lang_16'),
                 icon = 'fa-solid fa-ghost',
-                event = 'rsg-adminmenu:client:goinvisible',
+                onSelect = function()
+                    ExecuteCommand('txAdmin:menu:noClipToggle')
+                end,
+                arrow = true
+            },
+            {
+                title = Lang:t('lang_146'),
+                description = Lang:t('lang_147'),
+                icon = 'fa-solid fa-id-card-clip',
+                onSelect = function()
+                    ExecuteCommand('txAdmin:menu:togglePlayerIDs')
+                end,
                 arrow = true
             },
             {
@@ -108,11 +119,11 @@ RegisterNetEvent('rsg-adminmenu:client:playersoptions', function()
         local options = {}
         for k, v in pairs(players) do
             options[#options + 1] = {
-                title = Lang:t('lang_19') ..k..' | '..v.name,
+                title = Lang:t('lang_19') ..v.id..' | '..v.name,
                 description = Lang:t('lang_20'),
                 icon = 'fa-solid fa-circle-user',
                 event = 'rsg-adminmenu:client:playermenu',
-                args = { name = v.name, player = k },
+                args = { name = v.name, player = v.id },
                 arrow = true,
             }
         end
@@ -139,7 +150,7 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
         menu = 'players_optionssmenu',
         onBack = function() end,
         options = {
-			{
+            {
                 title = Lang:t('lang_137'),
                 description = Lang:t('lang_138'),
                 icon = 'fa-solid fa-briefcase-medical',
@@ -147,7 +158,7 @@ RegisterNetEvent('rsg-adminmenu:client:playermenu', function(data)
                 args = { id = data.player },
                 arrow = true
             },
-			{
+            {
                 title = Lang:t('lang_22'),
                 description = Lang:t('lang_23'),
                 icon = 'fa-solid fa-briefcase-medical',
@@ -237,8 +248,8 @@ RegisterNetEvent('rsg-adminmenu:client:serveroptions', function()
             {
                 title = Lang:t('lang_39'),
                 description = Lang:t('lang_40'),
-                icon = 'fa-solid fa-fingerprint',
-                event = '',
+                icon = 'fa-solid fa-cloud-sun',
+                event = 'weathersync:openAdminUi',
                 arrow = true
             },
         }
@@ -252,13 +263,13 @@ end)
 -------------------------------------------------------------------
 local invisible = false
 RegisterNetEvent('rsg-adminmenu:client:goinvisible', function()
-    TriggerServerEvent('rsg-logs:server:CreateLog', 'admin', 'Admin Options', 'red', GetPlayerName() .. ' toggled > INVISIBLE MODE <')
+    TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Admin Options', 'red', GetPlayerName() .. ' toggled > INVISIBLE MODE <')
     if invisible then
-        SetEntityVisible(PlayerPedId(), true)
+        SetEntityVisible(cache.ped, true)
         invisible = false
         lib.notify({ title = Lang:t('lang_42'), description = Lang:t('lang_43'), type = 'inform' })
     else
-        SetEntityVisible(PlayerPedId(), false)
+        SetEntityVisible(cache.ped, false)
         invisible = true
         lib.notify({ title = Lang:t('lang_44'), description = Lang:t('lang_45'), type = 'inform' })
     end
@@ -272,13 +283,13 @@ RegisterNetEvent('rsg-adminmenu:client:godmode', function()
     if godmode == true then
         lib.notify({ title = Lang:t('lang_46'), description = Lang:t('lang_47'), type = 'inform' })
     end
-    TriggerServerEvent('rsg-logs:server:CreateLog', 'admin', 'Admin Options', 'red', GetPlayerName() .. ' toggled > GODMODE <')
+    TriggerServerEvent('rsg-log:server:CreateLog', 'adminmenu', 'Admin Options', 'red', GetPlayerName() .. ' toggled > GODMODE <')
     if godmode then
         while godmode do
             Wait(0)
-            SetPlayerInvincible(PlayerPedId(), true)
+            SetPlayerInvincible(cache.ped, true)
         end
-        SetPlayerInvincible(PlayerPedId(), false)
+        SetPlayerInvincible(cache.ped, false)
         lib.notify({ title = Lang:t('lang_48'), description = Lang:t('lang_49'), type = 'inform' })
     end
 end)
@@ -295,7 +306,7 @@ end)
 -------------------------------------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:kickplayer', function(data)
     local input = lib.inputDialog(Lang:t('lang_50')..data.name, {
-        { 
+        {
             label = Lang:t('lang_51'),
             type = 'input',
             required = true,
@@ -312,7 +323,7 @@ end)
 -------------------------------------------------------------------
 RegisterNetEvent('rsg-adminmenu:client:banplayer', function(data)
     local input = lib.inputDialog(Lang:t('lang_52')..data.name, {
-        { 
+        {
             label = Lang:t('lang_53'),
             type = 'select',
                 options = {
@@ -321,7 +332,7 @@ RegisterNetEvent('rsg-adminmenu:client:banplayer', function(data)
                 },
             required = true,
         },
-        { 
+        {
             label = Lang:t('lang_54'),
             type = 'select',
                 options = {
@@ -339,7 +350,7 @@ RegisterNetEvent('rsg-adminmenu:client:banplayer', function(data)
                 },
             required = true,
         },
-        { 
+        {
             label = Lang:t('lang_51'),
             type = 'input',
             required = true,
@@ -368,28 +379,34 @@ local lastSpectateCoord = nil
 local isSpectating = false
 
 RegisterNetEvent('rsg-adminmenu:server:spectateplayer', function(targetPed)
-    local myPed = PlayerPedId()
     local targetplayer = GetPlayerFromServerId(targetPed)
     local target = GetPlayerPed(targetplayer)
     if not isSpectating then
         isSpectating = true
-        SetEntityVisible(myPed, false) -- Set invisible
-        SetEntityCollision(myPed, false, false) -- Set collision
-        SetEntityInvincible(myPed, true) -- Set invincible
-        NetworkSetEntityInvisibleToNetwork(myPed, true) -- Set invisibility
-        lastSpectateCoord = GetEntityCoords(myPed) -- save my last coords
+        SetEntityVisible(cache.ped, false) -- Set invisible
+        SetEntityCollision(cache.ped, false, false) -- Set collision
+        SetEntityInvincible(cache.ped, true) -- Set invincible
+        NetworkSetEntityInvisibleToNetwork(cache.ped, true) -- Set invisibility
+        lastSpectateCoord = GetEntityCoords(cache.ped) -- save my last coords
         NetworkSetInSpectatorMode(true, target) -- Enter Spectate Mode
     else
         isSpectating = false
         NetworkSetInSpectatorMode(false, target) -- Remove From Spectate Mode
-        NetworkSetEntityInvisibleToNetwork(myPed, false) -- Set Visible
-        SetEntityCollision(myPed, true, true) -- Set collision
-        SetEntityCoords(myPed, lastSpectateCoord) -- Return Me To My Coords
-        SetEntityVisible(myPed, true) -- Remove invisible
-        SetEntityInvincible(myPed, false) -- Remove godmode
+        NetworkSetEntityInvisibleToNetwork(cache.ped, false) -- Set Visible
+        SetEntityCollision(cache.ped, true, true) -- Set collision
+        SetEntityCoords(cache.ped, lastSpectateCoord) -- Return Me To My Coords
+        SetEntityVisible(cache.ped, true) -- Remove invisible
+        SetEntityInvincible(cache.ped, false) -- Remove godmode
         lastSpectateCoord = nil -- Reset Last Saved Coords
     end
 end)
+
+-------------------------------------------------------------------
+-- sort table function
+-------------------------------------------------------------------
+local function compareNames(a, b)
+    return a.value < b.value
+end
 
 -------------------------------------------------------------------
 -- give item
@@ -402,13 +419,15 @@ RegisterNetEvent('rsg-adminmenu:client:giveitem', function(data)
         option[#option + 1] = content
     end
 
-    local input = lib.inputDialog(Lang:t('lang_132'), {
+    table.sort(option, compareNames)
+
+    local item = lib.inputDialog(Lang:t('lang_132'), {
         { type = 'select', options = option, label = Lang:t('lang_133'), required = true },
         { type = 'number', label = Lang:t('lang_134'), required = true }
     })
-    if not input then return end
+    if not item then return end
 
-    TriggerServerEvent('rsg-adminmenu:server:giveitem', data.id, input[1], input[2])
+    TriggerServerEvent('rsg-adminmenu:server:giveitem', data.id, item[1], item[2])
 
 end)
 
